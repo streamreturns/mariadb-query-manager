@@ -1,6 +1,12 @@
 # mariadb-query-manager
 MariaDB or other MySQL compatible Database Query Manager
 
+## Install
+```bash
+pip install -r requirements.txt
+pip install .
+```
+
 ## Usage
 See `Usage.ipynb`
 
