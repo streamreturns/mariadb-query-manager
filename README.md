@@ -3,6 +3,8 @@ MariaDB or other MySQL compatible Database Query Manager
 
 ## Install
 ```bash
+git clone https://github.com/streamreturns/mariadb-query-manager
+cd mariadb-query-manager
 pip install -r requirements.txt
 pip install .
 ```
