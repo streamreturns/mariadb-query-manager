@@ -149,11 +149,11 @@ class MariaDbQueryManager(object):
             database=database, table=table, column_names='`' + '`, `'.join(dataframe.columns.to_list()) + '`', column_values_placeholder=('%s ' * len(dataframe.columns.to_list())).strip().replace(' ', ', ')
         )
 
-        self.renew_db_connection()
+        max_retry_counts = 10
+        for retry_count in range(max_retry_counts):
+            self.renew_db_connection()
 
-        with self.connection.cursor() as cursor:
-            max_retry_counts = 10
-            for retry_count in range(max_retry_counts):
+            with self.connection.cursor() as cursor:
                 try:
                     cursor.executemany(sql, dataframe.values.tolist())
                     break
@@ -161,8 +161,6 @@ class MariaDbQueryManager(object):
                     print('[MariaDbQueryManager] `insert_dataframe()`', e)
                     print('exception occurred! reconnect database (%d of %d)' % (retry_count + 1, max_retry_counts))
                     sleep(20 + retry_count)
-
-                    self.renew_db_connection()
 
         self.close_db_connection()
 
