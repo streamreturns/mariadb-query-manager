@@ -52,7 +52,15 @@ class MariaDbQueryManager(object):
                 print(f'[MariaDbQueryManager] `default_database` is changed to `{default_database}`.'.format(default_database))
             self.default_database = default_database
 
-        self.connection = pymysql.connect(host=self.host, port=self.port, user=self.username, password=self.password, db=self.default_database)
+        max_retry_counts = 10
+        for retry_count in range(max_retry_counts):
+            try:
+                self.connection = pymysql.connect(host=self.host, port=self.port, user=self.username, password=self.password, db=self.default_database)
+                break
+            except (OSError, pymysql.err.OperationalError) as e:
+                print('[MariaDbQueryManager] `renew_db_connection()`', e)
+                print('exception occurred! reconnect database (%d of %d)' % (retry_count + 1, max_retry_counts))
+                sleep(20 + retry_count)
 
     def check_table_existence(self, table, database=None):
         database = self.default_database if database is None else database
@@ -144,13 +152,15 @@ class MariaDbQueryManager(object):
         self.renew_db_connection()
 
         with self.connection.cursor() as cursor:
-            for retry_count in range(10):
+            max_retry_counts = 10
+            for retry_count in range(max_retry_counts):
                 try:
                     cursor.executemany(sql, dataframe.values.tolist())
                     break
-                except (OSError, pymysql.err.OperationalError):
-                    print('exception occurred! reconnect database (%d of %d)' % (retry_count + 1, 10))
-                    sleep(100 + retry_count)
+                except (OSError, pymysql.err.OperationalError) as e:
+                    print('[MariaDbQueryManager] `insert_dataframe()`', e)
+                    print('exception occurred! reconnect database (%d of %d)' % (retry_count + 1, max_retry_counts))
+                    sleep(20 + retry_count)
 
                     self.renew_db_connection()
 
